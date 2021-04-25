@@ -64,13 +64,13 @@
     // San Francisco popup
     var popupsf = new mapboxgl.Popup({ closeOnClick: false })
     .setLngLat([-122.44, 37.76])
-    .setHTML('<h1>San Francisco</h1>')
+    .setHTML('<h2>San Francisco</h2>')
     .addTo(map);
 
     // Los Angeles popup
     var popupla = new mapboxgl.Popup({ closeOnClick: false })
     .setLngLat([-118.2437, 34.0522])
-    .setHTML('<h1>Los Angeles</h1>')
+    .setHTML('<h2>Los Angeles</h2>')
     .addTo(map);
     // Add a function that sets pitch (tilt) to 60 and bearing (rotation) to 45: https://docs.mapbox.com/mapbox-gl-js/api/#map#setpitch and https://docs.mapbox.com/mapbox-gl-js/api/#map#setbearing
     map.setPitch(60);
