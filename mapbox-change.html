@@ -62,12 +62,12 @@
   .colors {
     background: linear-gradient(
     to right,
-    #2dc4b2,
-    #3bb3c3,
-    #669ec4,
-    #8b88b6,
-    #a2719b,
-    #aa5e79
+    #f66d7a,
+    #d44292,
+    #b1339e,
+    #952ea0,
+    #482991,
+    #482991
     );
     margin-bottom: 5px;
   }
@@ -95,13 +95,13 @@
   </ul>
   <br>
 
-  <!-- Add a div to give the map somewhere to go -->  
+  <!-- Add a div to give the map somewhere to go -->
   <div id='map'></div>
   <div id='console'>
-    <h1>Motor vehicle collisions</h1>
-    <p>Data: <a href='https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95'>Motor vehicle collision injuries and deaths</a> in NYC, Jan 2016</p>
+    <h1>Tornado Magnitude from 1950 to 2019</h1>
+    <p>Data: <a href='https://www.spc.noaa.gov/gis/svrgis/'>Tornado Inital Points Source</a></p>
     <div class="session">
-      <h2>Casualty</h2>
+      <h2>Magnitude (F-scale)</h2>
       <div class="row colors"></div>
       <div class="row labels">
         <div class="label">0</div>
@@ -109,38 +109,22 @@
         <div class="label">2</div>
         <div class="label">3</div>
         <div class="label">4</div>
-        <div class="label">5+</div>
+        <div class="label">5</div>
       </div>
   </div>
   <div class="session">
-    <h2>Hour: <label id="active-hour">12PM</label></h2>
+    <h2>Year: <label id="active-year">1950</label></h2>
     <input
       id="slider"
       class="row"
       type="range"
-      min="0"
-      max="23"
+      min="1950"
+      max="2019"
       step="1"
-      value="12"
+      value="1950"
     />
-  </div>
-  <div class="session">
-    <h2>Day of the week</h2>
-    <div class="row" id="filters">
-      <input
-        id="all"
-        type="radio"
-        name="toggle"
-        value="all"
-        checked="checked"
-      />
-      <label for="all">All</label>
-      <input id="weekday" type="radio" name="toggle" value="weekday" />
-      <label for="weekday">Weekday</label>
-      <input id="weekend" type="radio" name="toggle" value="weekend" />
-      <label for="weekend">Weekend</label>
-    </div>
-  </div>
+</div>
+<p>Description: This map depicts the magnitude of tornados across the U.S. These points represent where the tornado first formed rather than tornado tracks.</p>
 </div>
   <script>
   mapboxgl.accessToken = 'pk.eyJ1IjoiY2F3aWxsaWFtcyIsImEiOiJja2xsZ3pxdmczaDZjMndxZXB2aXdrdTZ3In0.TBD0QCuYQMkeamI_srV2XQ';
@@ -148,26 +132,25 @@
   var map = new mapboxgl.Map({
     container: 'map', // container element id
     style: 'mapbox://styles/mapbox/light-v10',
-    center: [-74.0059, 40.7128], // initial map center in [lon, lat]
-    zoom: 12
+    center: [-95.6752, 39.0473], // initial map center in [lon, lat]
+    zoom: 5
   });
 
   map.on('load', function () {
-    var filterHour = ['==', ['number', ['get', 'Hour']], 12];
-    var filterDay = ['!=', ['string', ['get', 'Day']], 'placeholder'];
+    var filterYear = ['==', ['number', ['get', 'yr']], 1950];
 
   map.addLayer({
-    id: 'collisions',
+    id: 'torn',
     type: 'circle',
     source: {
       type: 'geojson',
-      data: './collisions1601.geojson' // replace this with the url of your own geojson
+      data: './1950-2019-torn-initpoint_updated.geojson' // replace this with the url of your own geojson
     },
     paint: {
       'circle-radius': [
         'interpolate',
         ['linear'],
-        ['number', ['get', 'Casualty']],
+        ['number', ['get', 'mag']],
         0,
         4,
         5,
@@ -176,69 +159,34 @@
         'circle-color': [
           'interpolate',
           ['linear'],
-          ['number', ['get', 'Casualty']],
+          ['number', ['get', 'mag']],
         0,
-        '#2DC4B2',
+        '#f66d7a',
         1,
-        '#3BB3C3',
+        '#d44292',
         2,
-        '#669EC4',
+        '#b1339e',
         3,
-        '#8B88B6',
+        '#952ea0',
         4,
-        '#A2719B',
+        '#482991',
         5,
-        '#AA5E79'
+        '#482991'
       ],
     'circle-opacity': 0.8
     },
-    'filter': ['all', filterHour, filterDay]
+    'filter': ['all', filterYear]
   });
 
   // update hour filter when the slider is dragged
   document
     .getElementById('slider')
     .addEventListener('input', function (e) {
-      var hour = parseInt(e.target.value);
+      var year = parseInt(e.target.value);
       // update the map
-      filterHour = ['==', ['number', ['get', 'Hour']], hour];
-      map.setFilter('collisions', ['all', filterHour, filterDay]);
-
-      // converting 0-23 hour to AMPM format
-      var ampm = hour >= 12 ? 'PM' : 'AM';
-      var hour12 = hour % 12 ? hour % 12 : 12;
-
+      map.setFilter('torn', ['==', ['number', ['get', 'yr']], year]);
       // update text in the UI
-      document.getElementById('active-hour').innerText = hour12 + ampm;
-      });
-
-  document
-    .getElementById('filters')
-    .addEventListener('change', function (e) {
-      var day = e.target.value;
-      // update the map filter
-      if (day === 'all') {
-        filterDay = ['!=', ['string', ['get', 'Day']], 'placeholder'];
-      } else if (day === 'weekday') {
-        filterDay = [
-          'match',
-          ['get', 'Day'],
-          ['Sat', 'Sun'],
-          false,
-          true
-        ];
-      } else if (day === 'weekend') {
-        filterDay = [
-          'match',
-          ['get', 'Day'],
-          ['Sat', 'Sun'],
-          true,
-          false
-        ];
-      } else {
-        console.log('error');
-      }
-      map.setFilter('collisions', ['all', filterHour, filterDay]);
+      document.getElementById('active-year').innerText = year;
     });
   });
   </script>
